@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Céu estrelado 💖</title>
+<style>
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+}
+
+/* ===== Conteúdo central ===== */
+.content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* centraliza verticalmente */
+  align-items: center;     /* centraliza horizontalmente */
+  gap: 50px;               /* espaço entre coração e frase */
+  padding: 20px;           /* responsividade em telas pequenas */
+  box-sizing: border-box;
+}
+
+/* ===== Coração pulsante enfeitado ===== */
+.heart {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  transform: rotate(-45deg);
+  animation: pulse 1s infinite;
+  background: #e63946;
+  box-shadow: 0 0 30px rgba(230, 57, 70, 0.7), 0 0 60px rgba(230, 57, 70, 0.5);
+}
+
+.heart::before,
+.heart::after {
+  content: "";
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  background: #e63946;
+  border-radius: 50%;
+  box-shadow: 0 0 30px rgba(230, 57, 70, 0.7), 0 0 60px rgba(230, 57, 70, 0.5);
+}
+
+.heart::before {
+  top: -70px;
+  left: 0;
+}
+
+.heart::after {
+  left: 70px;
+  top: 0;
+}
+
+@keyframes pulse {
+  0% { transform: rotate(-45deg) scale(1); }
+  50% { transform: rotate(-45deg) scale(1.15); }
+  100% { transform: rotate(-45deg) scale(1); }
+}
+
+/* ===== Frase ===== */
+.message {
+  color: #fff;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  font-size: clamp(1rem, 2.5vw, 1.8rem); /* responsivo */
+  text-align: center;
+  text-shadow: 0 0 20px #fff;
+}
+</style>
+</head>
+<body>
+
+<canvas id="sky"></canvas>
+
+<div class="content">
+  <div class="heart"></div>
+  <div class="message">Mesmo longe, você ilumina meu céu ✨</div>
+</div>
+
+<script>
+const canvas = document.getElementById('sky');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+/* ===== Estrelas ===== */
+const stars = [];
+for (let i = 0; i < 150; i++) {
+  stars.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    radius: Math.random() * 1.5,
+    speed: 0.05 + Math.random() * 0.15
+  });
+}
+
+/* ===== Nuvens cósmicas coloridas ===== */
+const clouds = [];
+const cloudColors = [
+  'rgba(255,150,200,0.1)',
+  'rgba(150,200,255,0.1)',
+  'rgba(200,150,255,0.1)'
+];
+for (let i = 0; i < 12; i++) {
+  clouds.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    radius: 80 + Math.random() * 120,
+    dx: (Math.random() - 0.5) * 0.03,
+    dy: (Math.random() - 0.5) * 0.02,
+    color: cloudColors[Math.floor(Math.random() * cloudColors.length)]
+  });
+}
+
+/* ===== Galáxias pequenas ===== */
+const galaxies = [];
+for (let i = 0; i < 8; i++) {
+  galaxies.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    radius: 5 + Math.random() * 10,
+    alpha: 0.05 + Math.random() * 0.15
+  });
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // fundo preto
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // estrelas
+  ctx.fillStyle = 'white';
+  stars.forEach(s => {
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
+    ctx.fill();
+    s.y -= s.speed;
+    if (s.y < 0) s.y = canvas.height;
+  });
+
+  // nuvens cósmicas animadas
+  clouds.forEach(c => {
+    const gradient = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.radius);
+    gradient.addColorStop(0, c.color);
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+    ctx.fill();
+    // movimento suave
+    c.x += c.dx;
+    c.y += c.dy;
+    if (c.x < -c.radius) c.x = canvas.width + c.radius;
+    if (c.x > canvas.width + c.radius) c.x = -c.radius;
+    if (c.y < -c.radius) c.y = canvas.height + c.radius;
+    if (c.y > canvas.height + c.radius) c.y = -c.radius;
+  });
+
+  // galáxias pequenas
+  galaxies.forEach(g => {
+    ctx.beginPath();
+    ctx.arc(g.x, g.y, g.radius, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(180,200,255,${g.alpha})`;
+    ctx.fill();
+  });
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+
+</body>
+</html>
