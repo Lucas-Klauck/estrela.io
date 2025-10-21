@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Céu estrelado 💖</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* Variáveis CSS para fácil manutenção */
+:root {
+  --heart-color: #e63946; 
+  --heart-size: 140px;
+  --text-color: #fff;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+}
+
+/* ===== Conteúdo central ===== */
+.content {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center; 
+  gap: 50px; 
+  padding: 20px; 
+  box-sizing: border-box;
+}
+
+/* ===== Coração pulsante enfeitado ===== */
+.heart {
+  position: relative;
+  width: var(--heart-size);
+  height: var(--heart-size);
+  transform: rotate(-45deg);
+  animation: pulse 1.2s infinite cubic-bezier(0.66, 0.0, 0.34, 1);
+  background: var(--heart-color);
+  transition: box-shadow 0.5s ease-in-out, filter 0.5s ease-in-out;
+  box-shadow: 
+    0 0 15px rgba(255, 100, 100, 0.9), 
+    0 0 40px var(--heart-color); 
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); 
+}
+
+.heart::before,
+.heart::after {
+  content: "";
+  position: absolute;
+  width: var(--heart-size);
+  height: var(--heart-size);
+  background: var(--heart-color);
+  border-radius: 50%;
+}
+
+.heart::before {
+  top: calc(var(--heart-size) / -2);
+  left: 0;
+}
+
+.heart::after {
+  left: calc(var(--heart-size) / 2);
+  top: 0;
+}
+
+@keyframes pulse {
+  0% { transform: rotate(-45deg) scale(1); }
+  50% { transform: rotate(-45deg) scale(1.15); }
+  100% { transform: rotate(-45deg) scale(1); }
+}
+
+/* ===== Frase ===== */
+.message {
+  color: var(--text-color);
+  font-family: 'Poppins', "Segoe UI", Tahoma, sans-serif; 
+  font-size: clamp(1.2rem, 3vw, 2.2rem); 
+  font-weight: 500; 
+  text-align: center;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 25px rgba(255, 255, 255, 0.5); 
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
+  transition: opacity 1s ease-in-out; 
+}
+</style>
+</head>
+<body>
+
+<canvas id="sky"></canvas>
+
+<div class="content">
+  <div class="heart" id="pulsingHeart"></div>
+  <div class="message" id="messageText"></div>
+</div>
+
+<script>
+const canvas = document.getElementById('sky');
+const ctx = canvas.getContext('2d');
+const heartElement = document.getElementById('pulsingHeart');
+const messageElement = document.getElementById('messageText');
+let width, height;
+
+// =================================================================
+// LISTA DE FRASES ALEATÓRIAS
+// =================================================================
+
+const inspirationalMessages = [
+    "Mesmo longe, você ilumina meu céu ✨",
+    "Você é a estrela mais brilhante da minha galáxia.",
+    "Seja a mudança que você deseja ver no mundo. 🚀",
+    "Com você, o universo parece um lugar mais gentil.",
+    "O seu sorriso é o meu eclipse favorito.",
+    "Acredite no poder da sua própria luz. Nunca se apague.",
+    "Nenhuma distância apaga o brilho de quem nos faz bem.",
+    "Você é incrivelmente forte, lembre-se disso hoje.",
+    "Onde há amor, a distância é apenas um detalhe cósmico.",
+    "Seja gentil consigo. Você está fazendo o melhor que pode."
+];
+
+function setRandomMessage() {
+    const randomIndex = Math.floor(Math.random() * inspirationalMessages.length);
+    const selectedMessage = inspirationalMessages[randomIndex];
+    messageElement.textContent = selectedMessage;
+}
+
+// =================================================================
+// CLASSES PARA ENTIDADES CÓSMICAS
+// =================================================================
+
+class Star {
+    constructor() { this.reset(); this.twinkleFactor = Math.random() * Math.PI * 2; }
+    reset() { this.x = Math.random() * width; this.y = Math.random() * height; this.radius = Math.random() * 1.5; this.speed = 0.05 + Math.random() * 0.15; }
+    update() { this.y -= this.speed; if (this.y < 0) this.y = height; this.twinkleFactor += 0.05 + Math.random() * 0.05; }
+    draw() {
+        const alpha = 0.7 + (Math.sin(this.twinkleFactor) * 0.3);
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill();
+    }
+}
+
+class Cloud {
+    constructor(color) {
+        this.x = Math.random() * width; this.y = Math.random() * height; 
+        this.radius = 80 + Math.random() * 120;
+        this.dx = (Math.random() - 0.5) * 0.03; this.dy = (Math.random() - 0.5) * 0.02; 
+        // Aumentando a opacidade da cor inicial para ser mais visível
+        this.color = color.replace('0.1)', '0.15)'); // Aumenta a opacidade
+    }
+    update() {
+        this.x += this.dx; this.y += this.dy;
+        if (this.x < -this.radius) this.x = width + this.radius;
+        if (this.x > width + this.radius) this.x = -this.radius;
+        if (this.y < -this.radius) this.y = height + this.radius;
+        if (this.y > height + this.radius) this.y = -this.radius;
+    }
+    draw() {
+        // Tornando o gradiente mais definido
+        const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius * 0.8);
+        gradient.addColorStop(0, this.color); 
+        gradient.addColorStop(0.8, 'rgba(0,0,0,0.05)'); // Transição mais brusca
+        gradient.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = gradient;
+        ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fill();
+    }
+}
+
+class ShootingStar {
+    constructor() { this.reset(); }
+    reset() {
+        this.x = Math.random() * width * 0.5 - width * 0.5; this.y = Math.random() * height * 0.5 - height * 0.5;
+        this.length = 30 + Math.random() * 80; this.speed = 4 + Math.random() * 5;
+        this.angle = Math.PI / 4 + (Math.random() * 0.2 - 0.1); 
+        this.opacity = 1; this.active = Math.random() < 0.005;
+    }
+    update() {
+        if (!this.active) return;
+        this.x += Math.cos(this.angle) * this.speed; this.y += Math.sin(this.angle) * this.speed;
+        this.opacity -= 0.01; 
+        if (this.x > width * 1.5 || this.y > height * 1.5 || this.opacity <= 0) {
+             this.reset(); this.active = Math.random() < 0.005;
+        }
+    }
+    draw() {
+        if (!this.active) return;
+        ctx.save(); ctx.globalAlpha = this.opacity;
+        ctx.strokeStyle = 'white'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(this.x - Math.cos(this.angle) * this.length, this.y - Math.sin(this.angle) * this.length);
+        ctx.lineTo(this.x, this.y);
+        ctx.stroke();
+        ctx.restore();
+    }
+}
+
+
+// =================================================================
+// ANIMAÇÃO DO CORAÇÃO VIA JAVASCRIPT (mantida)
+// =================================================================
+
+let isHeartPulsingLight = false;
+function animateHeartGlow() {
+    let shadowColor;
+    let filterColor;
+    
+    if (isHeartPulsingLight) {
+        shadowColor = '#e63946'; 
+        filterColor = 'rgba(255, 255, 255, 0.5)';
+    } else {
+        shadowColor = '#ff8c94'; 
+        filterColor = 'rgba(255, 150, 200, 0.7)';
+    }
+
+    heartElement.style.boxShadow = `
+        0 0 15px rgba(255, 100, 100, 0.9), 
+        0 0 50px ${shadowColor}
+    `;
+    heartElement.style.filter = `drop-shadow(0 0 8px ${filterColor})`;
+
+    isHeartPulsingLight = !isHeartPulsingLight;
+}
+setInterval(animateHeartGlow, 1000); 
+
+// =================================================================
+// FUNÇÃO AJUSTADA: NEBULOSA DE FUNDO COM MAIS DEFINIÇÃO
+// =================================================================
+
+function drawNebula() {
+    const nebulaGradient = ctx.createRadialGradient(width * 0.5, height * 0.5, 0, width * 0.5, height * 0.5, Math.max(width, height) * 0.9);
+    
+    // Adicionando mais stops de cor para criar camadas e definição
+    nebulaGradient.addColorStop(0, 'rgba(50, 0, 100, 0.25)');   // Roxo escuro, centro mais opaco
+    nebulaGradient.addColorStop(0.3, 'rgba(80, 0, 150, 0.15)'); // Roxo médio
+    nebulaGradient.addColorStop(0.6, 'rgba(10, 10, 80, 0.1)');  // Azul profundo
+    nebulaGradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.05)');    // Quase preto
+    nebulaGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');         // Borda preta
+
+    ctx.fillStyle = nebulaGradient;
+    ctx.fillRect(0, 0, width, height);
+}
+
+// =================================================================
+// INICIALIZAÇÃO E LOOP PRINCIPAL (removendo a galáxia)
+// =================================================================
+
+const entities = [];
+const cloudColors = [
+    'rgba(255,150,200,0.1)', // Rosa
+    'rgba(150,200,255,0.1)', // Azul
+    'rgba(200,150,255,0.1)'  // Roxo
+];
+const shootingStars = [];
+
+function init() {
+    resizeCanvas();
+    setRandomMessage(); 
+
+    const starCount = Math.floor(width * height * 0.00015);
+
+    // Adiciona estrelas
+    for (let i = 0; i < starCount; i++) { entities.push(new Star()); }
+    
+    // Adiciona Nuvens Cósmicas (borrões flutuantes)
+    for (let i = 0; i < 12; i++) {
+        const color = cloudColors[Math.floor(Math.random() * cloudColors.length)];
+        entities.push(new Cloud(color));
+    }
+    
+    // Adiciona Estrelas Cadentes
+    for (let i = 0; i < 4; i++) { shootingStars.push(new ShootingStar()); }
+    
+    animateHeartGlow();
+}
+
+function resizeCanvas() {
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+    entities.filter(e => e instanceof Star).forEach(s => s.reset());
+}
+window.addEventListener('resize', resizeCanvas);
+
+
+function draw() {
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, width, height);
+
+    // 1. Nebulosa de fundo (mais definida)
+    drawNebula(); 
+
+    // 2. Entidades (Estrelas, Nuvens)
+    entities.forEach(entity => {
+        if (entity.update) { entity.update(); }
+        entity.draw();
+    });
+
+    // 3. Estrelas Cadentes (camada superior)
+    shootingStars.forEach(s => {
+        s.update();
+        s.draw();
+    });
+
+    requestAnimationFrame(draw);
+}
+
+// Inicia o programa
+init();
+draw();
+</script>
+
+</body>
+</html>
